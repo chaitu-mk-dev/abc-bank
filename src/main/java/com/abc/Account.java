@@ -3,16 +3,19 @@ package com.abc;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Account {
+public abstract class Account {
 
     public static final int CHECKING = 0;
     public static final int SAVINGS = 1;
     public static final int MAXI_SAVINGS = 2;
 
-    private final int accountType;
+    protected final int accountType;
     public List<Transaction> transactions;
+    
+    private Customer customer;
 
-    public Account(int accountType) {
+    public Account(int accountType, Customer customer) {
+    	this.customer = customer;
         this.accountType = accountType;
         this.transactions = new ArrayList<Transaction>();
     }
@@ -25,14 +28,40 @@ public class Account {
         }
     }
 
-public void withdraw(double amount) {
-    if (amount <= 0) {
-        throw new IllegalArgumentException("amount must be greater than zero");
-    } else {
-        transactions.add(new Transaction(-amount));
-    }
-}
+	public void withdraw(double amount) {
+	    if (amount <= 0) {
+	        throw new IllegalArgumentException("amount must be greater than zero");
+	    } else {
+	        transactions.add(new Transaction(-amount));
+	    }
+	}
+	
+	public void accountTransferFrom(Account toAccount, double amount) throws InsufficientFundBalanceException {
+		//	perform any needed authorizations
+		//	make a note of toAccount for record keeping
+		double currentBalance = this.sumTransactions();
+		
+		if(currentBalance < amount) {
+			throw new InsufficientFundBalanceException(currentBalance);
+		} else {
+			synchronized(customer) {
+				transactions.add(new Transaction(-amount));
+			}
+		}
+	}
+	
+	public void accountTransferTo(Account fromAccount, double amount) {
+		//	perform any needed authorizations
+		//	make a note of fromAccount for record keeping
+		
+		synchronized(customer) {
+			transactions.add(new Transaction(amount));
+		}
+	}
+	
+	public abstract double interestEarned();
 
+	/*
     public double interestEarned() {
         double amount = sumTransactions();
         switch(accountType){
@@ -54,6 +83,7 @@ public void withdraw(double amount) {
                 return amount * 0.001;
         }
     }
+    */
 
     public double sumTransactions() {
        return checkIfTransactionsExist(true);

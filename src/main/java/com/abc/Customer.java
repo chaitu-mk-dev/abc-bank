@@ -75,4 +75,11 @@ public class Customer {
     private String toDollars(double d){
         return String.format("$%,.2f", abs(d));
     }
+    
+    public synchronized boolean performAccountTransfer(Account fromAccount, Account toAccount, double amount) throws InsufficientFundBalanceException {
+    	//	perform user authorization
+    	fromAccount.accountTransferFrom(toAccount, amount);
+    	toAccount.accountTransferTo(fromAccount, amount);
+    	return true;
+    }
 }
